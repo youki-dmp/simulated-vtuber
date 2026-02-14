@@ -53,6 +53,21 @@
             width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);
             display: none; /* Initial state */
         }
+        /* Character Overlay */
+        #character-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            max-height: 90%;
+            z-index: 8;
+            pointer-events: none;
+            display: none;
+        }
+        #character-overlay.pos-right { left: auto; right: 20px; transform: none; }
+        #character-overlay.pos-left { left: 20px; transform: none; }
+        #character-overlay.pos-center { left: 50%; transform: translateX(-50%); }
+
         /* Standby Card / Thumbnail Mode */
         #standby-card {
             width: 80%; max-width: 500px;
@@ -158,6 +173,7 @@
     <div id="main-stage">
         <div id="video-container">
             <video id="camera-feed" autoplay playsinline muted></video>
+            <img id="character-overlay" src="" alt="Character">
             
             <div id="standby-card">
                 <div class="standby-tag">● 配信枠サムネ（ダミー）</div>
@@ -184,6 +200,15 @@
             <div class="main-controls">
                 <button id="btn-start" class="btn-main">🎙️ 配信開始</button>
                 <button id="btn-mic-toggle" class="btn-toggle off" disabled>マイクOFF</button>
+                <div class="btn-group">
+                    <button id="btn-char-upload" class="btn-toggle">立ち絵選択</button>
+                    <input type="file" id="char-file-input" style="display:none" accept="image/*">
+                    <select id="char-pos-select" style="background:#334155; color:white; border:none; border-radius:10px; padding:0 10px;">
+                        <option value="pos-center">真ん中</option>
+                        <option value="pos-right">右下</option>
+                        <option value="pos-left">左下</option>
+                    </select>
+                </div>
                 <input type="text" id="stream-title" placeholder="配信タイトルを入力 (例: 作業配信...)">
                 <input type="password" id="api-key" placeholder="Gemini API Key" style="width: 130px;">
                 <label style="font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 5px;">
@@ -217,6 +242,10 @@
         const standbyTitle = document.getElementById('standby-title');
         const standbyCard = document.getElementById('standby-card');
         const video = document.getElementById('camera-feed');
+        const charOverlay = document.getElementById('character-overlay');
+        const charFileInput = document.getElementById('char-file-input');
+        const charUploadBtn = document.getElementById('btn-char-upload');
+        const charPosSelect = document.getElementById('char-pos-select');
         const transcriptOverlay = document.getElementById('transcript-overlay');
         const apiKeyInput = document.getElementById('api-key');
         const offlineToggle = document.getElementById('offline-mode');
@@ -286,6 +315,19 @@
                 isMicOn = false;
                 transcriptOverlay.style.display = 'none';
             }
+        };
+
+        charUploadBtn.onclick = () => charFileInput.click();
+        charFileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                charOverlay.src = url;
+                charOverlay.style.display = 'block';
+            }
+        };
+        charPosSelect.onchange = (e) => {
+            charOverlay.className = e.target.value;
         };
 
         btnStart.onclick = () => {
